@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Copace</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>copace</ToolCommandName>
+    <PackageId>Copace</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Copace</Authors>
+    <Description>Track your GitHub Copilot Premium usage pace from the command line.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <RepositoryUrl>https://github.com/sebbogle/Copace</RepositoryUrl>
+    <PackageTags>copilot;github;cli;usage;pace</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="LICENSE.txt" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="System.CommandLine" />
+    <Using Include="Copace.Models" />
+    <Using Include="Copace.Services" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="3.0.0-preview.1.26104.118" />
+  </ItemGroup>
+
+</Project>

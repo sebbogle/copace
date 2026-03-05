@@ -1,0 +1,70 @@
+name: Publish
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  nuget:
+    name: Publish to NuGet
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+          dotnet-quality: preview
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Pack
+        run: dotnet pack --configuration Release -p:Version=${{ steps.version.outputs.VERSION }}
+
+      - name: Push to NuGet
+        run: dotnet nuget push bin/Release/Copace.${{ steps.version.outputs.VERSION }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+
+  release:
+    name: GitHub Release (${{ matrix.rid }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            artifact: copace-win-x64.zip
+          - os: ubuntu-latest
+            rid: linux-x64
+            artifact: copace-linux-x64.tar.gz
+          - os: macos-latest
+            rid: osx-arm64
+            artifact: copace-osx-arm64.tar.gz
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+          dotnet-quality: preview
+
+      - name: Publish self-contained binary
+        run: dotnet publish --configuration Release --runtime ${{ matrix.rid }} --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=true -p:IncludeNativeLibrariesForSelfExtract=true --output ./publish
+
+      - name: Archive (Windows)
+        if: runner.os == 'Windows'
+        run: Compress-Archive -Path ./publish/* -DestinationPath ${{ matrix.artifact }}
+
+      - name: Archive (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: tar -czf ${{ matrix.artifact }} -C ./publish .
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.artifact }}
+          generate_release_notes: true

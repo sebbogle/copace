@@ -13,7 +13,7 @@
     <ToolCommandName>copace</ToolCommandName>
     <PackageId>Copace</PackageId>
     <Version>1.0.0</Version>
-    <Authors>Copace</Authors>
+    <Authors>SebBogle</Authors>
     <Description>Track your GitHub Copilot Premium usage pace from the command line.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>

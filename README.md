@@ -42,7 +42,7 @@ copace <usage> [options]
 
 | Argument / Option           | Description                                                        |
 | --------------------------- | ------------------------------------------------------------------ |
-| `<usage>`                   | Your current Copilot Premium usage percentage (e.g. `42.5`)       |
+| `<usage>`                   | Your current Copilot Premium usage percentage from `0` to `100` (e.g. `42.5`) |
 | `--include-weekends`, `-w`  | Include weekend days in the pace calculation (default: weekdays only) |
 
 ### Examples

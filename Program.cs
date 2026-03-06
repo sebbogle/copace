@@ -3,6 +3,15 @@
     Description = "Your current Copilot Premium usage percentage (e.g. 42.5)."
 };
 
+usageArgument.Validators.Add(result =>
+{
+    decimal usage = result.GetValue(usageArgument);
+    if (usage is < 0m or > 100m)
+    {
+        result.AddError("Usage percentage must be between 0 and 100.");
+    }
+});
+
 Option<bool> includeWeekendsOption = new("--include-weekends", "-w")
 {
     Description = "Include weekend days in the pace calculation (default: weekdays only)."

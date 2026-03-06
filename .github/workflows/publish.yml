@@ -17,7 +17,6 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-          dotnet-quality: preview
 
       - name: Extract version from tag
         id: version
@@ -27,12 +26,13 @@ jobs:
         run: dotnet pack --configuration Release -p:Version=${{ steps.version.outputs.VERSION }}
 
       - name: Push to NuGet
-        run: dotnet nuget push bin/Release/Copace.${{ steps.version.outputs.VERSION }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push bin/Release/Copace.${{ steps.version.outputs.VERSION }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
-  release:
-    name: GitHub Release (${{ matrix.rid }})
+  build_release_assets:
+    name: Build Release Asset (${{ matrix.rid }})
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
@@ -50,21 +50,45 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-          dotnet-quality: preview
 
       - name: Publish self-contained binary
         run: dotnet publish --configuration Release --runtime ${{ matrix.rid }} --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=true -p:IncludeNativeLibrariesForSelfExtract=true --output ./publish
 
       - name: Archive (Windows)
         if: runner.os == 'Windows'
+        shell: pwsh
         run: Compress-Archive -Path ./publish/* -DestinationPath ${{ matrix.artifact }}
 
       - name: Archive (Linux/macOS)
         if: runner.os != 'Windows'
         run: tar -czf ${{ matrix.artifact }} -C ./publish .
 
+      - name: Upload packaged artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.rid }}
+          path: ${{ matrix.artifact }}
+          if-no-files-found: error
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [nuget, build_release_assets]
+    steps:
+      - name: Download packaged artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: ./artifacts
+          merge-multiple: true
+
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ matrix.artifact }}
+          files: |
+            artifacts/copace-win-x64.zip
+            artifacts/copace-linux-x64.tar.gz
+            artifacts/copace-osx-arm64.tar.gz
           generate_release_notes: true
+          fail_on_unmatched_files: true
+          overwrite_files: true
